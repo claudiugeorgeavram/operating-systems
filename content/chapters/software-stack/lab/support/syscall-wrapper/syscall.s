@@ -4,6 +4,7 @@ section .text
 
 global write
 global exit
+global read
 
 write:
     ; rax <- __NR_write (index of write syscall: 1)
@@ -21,6 +22,16 @@ exit:
     ; As rdi is also the first argument in the x86_64 calling convention,
     ; it doesn't need to be changed.
     mov rax, 60
+    syscall
+
+    ret
+
+read:
+    ; rax <- __NR_exit (index of exit syscall: 60)
+    ; rdi is the argument.
+    ; As rdi is also the first argument in the x86_64 calling convention,
+    ; it doesn't need to be changed.
+    mov rax, 0
     syscall
 
     ret
