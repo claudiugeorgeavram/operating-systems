@@ -22,3 +22,23 @@ char *strcpy(char *dest, const char *src)
 
 	return dest;
 }
+
+
+char *strcat(char *dest, const char *src)
+{
+	char *d = dest;
+
+	while (*d != '\0') {
+		d++;
+	}
+	
+	while (*src != '\0') {
+		*d = *src;
+		d++;
+		src++;
+	}
+
+	*d = *src;
+
+	return dest;
+}
