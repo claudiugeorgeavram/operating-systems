@@ -13,6 +13,17 @@ int main(void)
 	 * Use ltrace and strace command line tools to monitor library
 	 * and system calls.
 	 */
+	p = (int*)malloc(200 * sizeof(int));
+	free(p);
+
+	p = (int*)malloc(2000 * sizeof(int));
+	free(p);
+
+	p = (int*)malloc(20000 * sizeof(int));
+	free(p);
+
+	p = (int*)malloc(200000 * sizeof(int));
+	free(p);
 
 	return 0;
 }
