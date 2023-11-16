@@ -3,6 +3,7 @@
 section .rodata
 
 hello db "Hello, world!", 10, 0
+bye db "Bye, world!", 10, 0
 
 section .text
 
@@ -19,6 +20,12 @@ main:
     ; rdx <- third syscall argument (length: 14)
     mov rdi, 1
     mov rsi, hello
+    mov rdx, 14
+    mov rax, 1
+    syscall
+
+    mov rdi, 1
+    mov rsi, bye
     mov rdx, 14
     mov rax, 1
     syscall

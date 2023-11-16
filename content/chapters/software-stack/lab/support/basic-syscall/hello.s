@@ -5,6 +5,9 @@
 hello:
     .ascii "Hello, world!\n\0"
 
+bye:
+    .ascii "Bye, world!\n\0"
+
 .section .text
 
 .global main
@@ -20,6 +23,12 @@ main:
     # rdx <- third syscall argument (length: 14)
     mov $1, %rdi
     lea hello, %rsi
+    mov $14, %rdx
+    mov $1, %rax
+    syscall
+
+    mov $1, %rdi
+    lea bye, %rsi
     mov $14, %rdx
     mov $1, %rax
     syscall
