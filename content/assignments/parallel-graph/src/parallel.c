@@ -121,6 +121,12 @@ int main(int argc, char *argv[])
 	}
 
 	/* TODO: Create thread pool and traverse the graph. */
+	printf("before create");
+	os_threadpool_t *pool = threadpool_create(graph->num_nodes, 2);
+	printf("after create");
+	printf("befpre traverse");
+	traverse_graph_parallel(pool);
+	printf("after traverse");
 
 	printf("%d", sum);
 
