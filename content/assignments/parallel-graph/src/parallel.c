@@ -34,6 +34,7 @@ static void process_neighbours(void *args)
 
 	pthread_mutex_lock(&sum_lock);
 	sum += graph->nodes[current]->info;
+	printf("SUM: %d\n", sum);
 	pthread_mutex_unlock(&sum_lock);
 
 	for (int i = 0; i < graph->nodes[current]->num_neighbours; ++i) {
@@ -74,7 +75,9 @@ static void traverse_graph_parallel(os_threadpool_t *tp)
 			new_arg->tp = tp;
 			new_arg->graph = graph;
 			new_arg->current_node = (unsigned int) i;
+			printf("before task create\n");
 			new_task = task_create((void *) new_arg, process_neighbours);
+			printf("before add task in neigh\n");
 			add_task_in_queue(tp, new_task);
 		} else {
 			pthread_mutex_unlock(&visited_lock);
@@ -121,12 +124,15 @@ int main(int argc, char *argv[])
 	}
 
 	/* TODO: Create thread pool and traverse the graph. */
-	printf("before create");
-	os_threadpool_t *pool = threadpool_create(graph->num_nodes, 2);
-	printf("after create");
-	printf("befpre traverse");
+	printf("before create\n");
+	os_threadpool_t *pool = threadpool_create(graph->num_nodes, 4);
+
+	
+	printf("after create\n");
+	printf("befpre traverse\n");
 	traverse_graph_parallel(pool);
-	printf("after traverse");
+	printf("after traverse\n");
+	threadpool_stop(pool, processing_is_done);
 
 	printf("%d", sum);
 
