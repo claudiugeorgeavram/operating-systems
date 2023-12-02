@@ -23,29 +23,23 @@ os_task_t *task_create(void *arg, void (*f)(void *))
 void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
 {
 	/* TODO: Implement adding new task in queue. */
-	printf("before declare\n");
 	os_task_queue_t *new_node, *node_iter;
-	printf("before lcok\n");
 	pthread_mutex_lock(&(tp->lock));
 
-	printf("before if\n");
 	if(tp->tasks == NULL) {
-		printf("first task added\n");
+		printf("Create first task\n");
 		tp->tasks->task = t;
 		tp->tasks->next = NULL;
 	} else {
+		printf("Create another task\n");
 		node_iter = tp->tasks;
 		while (node_iter->next != NULL) {
 			node_iter = node_iter->next;
 		}
-		printf("another task added\n");
 		new_node = calloc(1, sizeof(*new_node));
-		printf("calloc done\n");
 		new_node->task = t;
 		new_node->next = NULL;
-		printf("added task in new node\n");
 		node_iter->next = new_node;
-		printf("added new node as next\n");
 	}
 
 
@@ -64,12 +58,13 @@ os_task_t *get_task(os_threadpool_t *tp)
 
 	if (tp->tasks->task == NULL) {
 		pthread_mutex_unlock(&(tp->lock));
+		printf("Task is null\n");
 		return NULL;
 	}
+	printf("Task is not null\n");
 	t = tp->tasks->task;
 	old_node = tp->tasks;
 	tp->tasks = tp->tasks->next;
-	free(old_node);
 
 	pthread_mutex_unlock(&(tp->lock));
 
@@ -107,9 +102,11 @@ void *thread_loop_function(void *args)
 	os_task_t *t;
 
 	while (!tp->should_stop) {
+		//printf("we get a task\n");
 		t = get_task(tp);
 		if (t != NULL) {
-			t->argument;
+			printf("task is not null we call the function\n");
+			t->task(t->argument);
 		}
 	}
 }
