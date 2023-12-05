@@ -27,19 +27,19 @@ void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
 	pthread_mutex_lock(&(tp->lock));
 
 	if(tp->tasks == NULL) {
-		printf("Create first task\n");
+		printf("in if\n");
 		tp->tasks->task = t;
 		tp->tasks->next = NULL;
 	} else {
-		printf("Create another task\n");
+		printf("in else\n");
 		node_iter = tp->tasks;
 		while (node_iter->next != NULL) {
 			node_iter = node_iter->next;
 		}
-		new_node = calloc(1, sizeof(*new_node));
-		new_node->task = t;
-		new_node->next = NULL;
-		node_iter->next = new_node;
+		//new_node = calloc(1, sizeof(*new_node));
+		node_iter->task = t;
+		node_iter->next = NULL;
+		//node_iter->next = new_node;
 	}
 
 
@@ -58,12 +58,9 @@ os_task_t *get_task(os_threadpool_t *tp)
 
 	if (tp->tasks->task == NULL) {
 		pthread_mutex_unlock(&(tp->lock));
-		printf("Task is null\n");
 		return NULL;
 	}
-	printf("Task is not null\n");
 	t = tp->tasks->task;
-	old_node = tp->tasks;
 	tp->tasks = tp->tasks->next;
 
 	pthread_mutex_unlock(&(tp->lock));
@@ -102,10 +99,8 @@ void *thread_loop_function(void *args)
 	os_task_t *t;
 
 	while (!tp->should_stop) {
-		//printf("we get a task\n");
 		t = get_task(tp);
 		if (t != NULL) {
-			printf("task is not null we call the function\n");
 			t->task(t->argument);
 		}
 	}
@@ -114,8 +109,9 @@ void *thread_loop_function(void *args)
 void threadpool_stop(os_threadpool_t *tp, int (*processing_is_complete)(os_threadpool_t *))
 {
 	/* TODO: Implement thread pool stop. */
-	if (processing_is_complete(tp)) {
-		tp->should_stop = 1;
-		return;
+	while(!processing_is_complete(tp)) {
+		
 	}
+	tp->should_stop = 1;
+	return;
 }

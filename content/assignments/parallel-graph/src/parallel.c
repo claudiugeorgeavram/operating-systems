@@ -79,6 +79,7 @@ static void traverse_graph_parallel(os_threadpool_t *tp)
 			new_task = task_create((void *) new_arg, process_neighbours);
 			printf("before add task in neigh\n");
 			add_task_in_queue(tp, new_task);
+			printf("complete add task in neigh\n");
 		} else {
 			pthread_mutex_unlock(&visited_lock);
 		}
