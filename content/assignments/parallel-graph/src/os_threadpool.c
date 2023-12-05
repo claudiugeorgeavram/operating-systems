@@ -28,22 +28,25 @@ void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
 
 	if(tp->tasks == NULL) {
 		printf("in if\n");
+		
+		tp->tasks = calloc(1, sizeof(tp->tasks));
 		tp->tasks->task = t;
 		tp->tasks->next = NULL;
+		pthread_mutex_unlock(&(tp->lock));
 	} else {
 		printf("in else\n");
 		node_iter = tp->tasks;
 		while (node_iter->next != NULL) {
 			node_iter = node_iter->next;
 		}
-		//new_node = calloc(1, sizeof(*new_node));
+		new_node = calloc(1, sizeof(*new_node));
 		node_iter->task = t;
 		node_iter->next = NULL;
-		//node_iter->next = new_node;
+		node_iter->next = new_node;
+		pthread_mutex_unlock(&(tp->lock));
 	}
 
 
-	pthread_mutex_unlock(&(tp->lock));
 }
 
 /* Get the head of task queue from threadpool */
@@ -101,6 +104,7 @@ void *thread_loop_function(void *args)
 	while (!tp->should_stop) {
 		t = get_task(tp);
 		if (t != NULL) {
+			printf("executing\n");
 			t->task(t->argument);
 		}
 	}
@@ -112,6 +116,8 @@ void threadpool_stop(os_threadpool_t *tp, int (*processing_is_complete)(os_threa
 	while(!processing_is_complete(tp)) {
 		
 	}
+	pthread_mutex_lock(&(tp->lock));
 	tp->should_stop = 1;
+	pthread_mutex_unlock(&(tp->lock));
 	return;
 }
