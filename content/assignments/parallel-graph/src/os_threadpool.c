@@ -23,29 +23,29 @@ os_task_t *task_create(void *arg, void (*f)(void *))
 void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
 {
 	/* TODO: Implement adding new task in queue. */
-	os_task_queue_t *new_node, *node_iter;
+	os_task_queue_t *new_node = malloc(sizeof(os_task_queue_t));
+    if (!new_node) {
+        // Handle memory allocation failure
+        return;
+    }
+    new_node->task = t;
+    new_node->next = NULL;\
+
 	pthread_mutex_lock(&(tp->lock));
 
 	if(tp->tasks == NULL) {
-		printf("in if\n");
 		
-		tp->tasks = calloc(1, sizeof(tp->tasks));
-		tp->tasks->task = t;
-		tp->tasks->next = NULL;
-		pthread_mutex_unlock(&(tp->lock));
+		tp->tasks = new_node;
 	} else {
-		printf("in else\n");
-		node_iter = tp->tasks;
-		while (node_iter->next != NULL) {
-			node_iter = node_iter->next;
-		}
-		new_node = calloc(1, sizeof(*new_node));
-		node_iter->task = t;
-		node_iter->next = NULL;
+		os_task_queue_t *node_iter = tp->tasks;
+        while (node_iter->next != NULL) {
+            node_iter = node_iter->next;
+        }
 		node_iter->next = new_node;
-		pthread_mutex_unlock(&(tp->lock));
+		
 	}
 
+	pthread_mutex_unlock(&(tp->lock));
 
 }
 
@@ -54,12 +54,10 @@ os_task_t *get_task(os_threadpool_t *tp)
 {
 	/* TODO: Implement getting head of task queue. */
 	os_task_t *t;
-	os_task_queue_t *old_node;
-
 
 	pthread_mutex_lock(&(tp->lock));
 
-	if (tp->tasks->task == NULL) {
+	if (tp->tasks == NULL) {
 		pthread_mutex_unlock(&(tp->lock));
 		return NULL;
 	}
@@ -77,15 +75,25 @@ os_threadpool_t *threadpool_create(unsigned int num_tasks, unsigned int num_thre
 	/* TODO: Implement thread pool creation. */
 	os_threadpool_t *tp;
 	tp = calloc(1, sizeof(*tp));
+	if (!tp) {
+        // Handle memory allocation failure
+        return NULL;
+    }
 
 	pthread_mutex_init (&(tp->lock), NULL);
 	
 	/* Initialize tasks */
-	tp->tasks = calloc(num_tasks, sizeof(tp->tasks));
+	tp->tasks = NULL;
 	
 	/* Initialize threads */
 	tp->num_threads = num_threads;
-	tp->threads = calloc(num_threads, sizeof(tp->threads));
+	tp->threads = calloc(num_threads, sizeof(pthread_t));
+	if (!tp->threads) {
+        // Handle memory allocation failure
+        free(tp);
+        return NULL;
+    }
+
 	for (int i = 0; i < tp->num_threads; i++) {
 		pthread_create(&(tp->threads[i]), NULL, thread_loop_function, (void *)tp);
 	}
@@ -104,7 +112,6 @@ void *thread_loop_function(void *args)
 	while (!tp->should_stop) {
 		t = get_task(tp);
 		if (t != NULL) {
-			printf("executing\n");
 			t->task(t->argument);
 		}
 	}
@@ -114,10 +121,14 @@ void threadpool_stop(os_threadpool_t *tp, int (*processing_is_complete)(os_threa
 {
 	/* TODO: Implement thread pool stop. */
 	while(!processing_is_complete(tp)) {
-		
+
 	}
 	pthread_mutex_lock(&(tp->lock));
 	tp->should_stop = 1;
 	pthread_mutex_unlock(&(tp->lock));
+
+	for (int i = 0; i < tp->num_threads; ++i) {
+        pthread_join(tp->threads[i], NULL);
+    }
 	return;
 }
