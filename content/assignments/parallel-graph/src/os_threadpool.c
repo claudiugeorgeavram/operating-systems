@@ -44,7 +44,7 @@ void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
 		node_iter->next = new_node;
 		
 	}
-
+	pthread_cond_signal(&(tp->pending_tasks_exist));
 	pthread_mutex_unlock(&(tp->lock));
 
 }
@@ -53,13 +53,18 @@ void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
 os_task_t *get_task(os_threadpool_t *tp)
 {
 	/* TODO: Implement getting head of task queue. */
-	os_task_t *t;
+	os_task_t *t = NULL;
 
 	pthread_mutex_lock(&(tp->lock));
 
 	if (tp->tasks == NULL) {
-		pthread_mutex_unlock(&(tp->lock));
-		return NULL;
+		tp->num_waiting_threads++;
+		pthread_cond_wait(&(tp->pending_tasks_exist), &(tp->lock));
+		tp->num_waiting_threads--;
+		if(tp->should_stop) {
+			pthread_mutex_unlock(&(tp->lock));
+			return NULL;
+		}
 	}
 	t = tp->tasks->task;
 	tp->tasks = tp->tasks->next;
@@ -81,12 +86,14 @@ os_threadpool_t *threadpool_create(unsigned int num_tasks, unsigned int num_thre
     }
 
 	pthread_mutex_init (&(tp->lock), NULL);
+	pthread_cond_init(&(tp->pending_tasks_exist), NULL);
 	
 	/* Initialize tasks */
 	tp->tasks = NULL;
 	
 	/* Initialize threads */
 	tp->num_threads = num_threads;
+	tp->num_waiting_threads = 0;
 	tp->threads = calloc(num_threads, sizeof(pthread_t));
 	if (!tp->threads) {
         // Handle memory allocation failure
@@ -109,7 +116,7 @@ void *thread_loop_function(void *args)
 	os_threadpool_t *tp = (os_threadpool_t *)args;
 	os_task_t *t;
 
-	while (!tp->should_stop) {
+	while (!tp->should_stop) {		
 		t = get_task(tp);
 		if (t != NULL) {
 			t->task(t->argument);
@@ -123,12 +130,16 @@ void threadpool_stop(os_threadpool_t *tp, int (*processing_is_complete)(os_threa
 	while(!processing_is_complete(tp)) {
 
 	}
+	
+	while(tp->num_waiting_threads != tp->num_threads) {
+	}
 	pthread_mutex_lock(&(tp->lock));
 	tp->should_stop = 1;
+	pthread_cond_broadcast(&(tp->pending_tasks_exist));
 	pthread_mutex_unlock(&(tp->lock));
 
 	for (int i = 0; i < tp->num_threads; ++i) {
-        pthread_join(tp->threads[i], NULL);
-    }
+		pthread_join(tp->threads[i], NULL);
+	}
 	return;
 }

@@ -19,10 +19,12 @@ typedef struct {
 	unsigned int should_stop;
 
 	unsigned int num_threads;
+	unsigned int num_waiting_threads;
 	pthread_t *threads;
 
 	os_task_queue_t *tasks;
 	pthread_mutex_t lock;
+	pthread_cond_t pending_tasks_exist;
 } os_threadpool_t;
 
 os_task_t *task_create(void *arg, void (*f)(void *));

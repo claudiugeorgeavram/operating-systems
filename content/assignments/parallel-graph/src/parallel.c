@@ -34,7 +34,7 @@ static void process_neighbours(void *args)
 
 	pthread_mutex_lock(&sum_lock);
 	sum += graph->nodes[current]->info;
-	printf("SUM: %d\n", sum);
+	//printf("SUM: %d\n", sum);
 	pthread_mutex_unlock(&sum_lock);
 
 	for (int i = 0; i < graph->nodes[current]->num_neighbours; ++i) {
