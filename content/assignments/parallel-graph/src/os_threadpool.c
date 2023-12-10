@@ -36,7 +36,7 @@ void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
 
 	pthread_mutex_lock(&(tp->lock));
 
-	if(tp->tasks == NULL) {		
+	if(tp->tasks == NULL) {
 		tp->tasks = new_node;
 	} else {
 		os_task_queue_t *node_iter = tp->tasks;
@@ -44,11 +44,9 @@ void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
             node_iter = node_iter->next;
         }
 		node_iter->next = new_node;
-		
 	}
 	pthread_cond_signal(&(tp->pending_tasks_exist));
 	pthread_mutex_unlock(&(tp->lock));
-
 }
 
 /* Get the head of task queue from threadpool */
@@ -60,7 +58,7 @@ os_task_t *get_task(os_threadpool_t *tp)
 
 	if (tp->tasks == NULL) {
 		tp->num_waiting_threads++;
-		pthread_cond_wait(&(tp->pending_tasks_exist), &(tp->lock));		
+		pthread_cond_wait(&(tp->pending_tasks_exist), &(tp->lock));
 		if(tp->should_stop) {
 			pthread_mutex_unlock(&(tp->lock));
 			return NULL;
@@ -86,13 +84,12 @@ os_threadpool_t *threadpool_create(unsigned int num_tasks, unsigned int num_thre
         // Handle memory allocation failure
         return NULL;
     }
-
-	pthread_mutex_init (&(tp->lock), NULL);
+	pthread_mutex_init(&(tp->lock), NULL);
 	pthread_cond_init(&(tp->pending_tasks_exist), NULL);
-	
+
 	/* Initialize tasks */
 	tp->tasks = NULL;
-	
+
 	/* Initialize threads */
 	tp->num_threads = num_threads;
 	tp->num_waiting_threads = 0;
@@ -117,7 +114,7 @@ void *thread_loop_function(void *args)
 	os_threadpool_t *tp = (os_threadpool_t *)args;
 	os_task_t *t;
 
-	while (!tp->should_stop) {		
+	while (!tp->should_stop) {
 		t = get_task(tp);
 		if (t != NULL) {
 			t->task(t->argument);
@@ -130,11 +127,9 @@ void *thread_loop_function(void *args)
 void threadpool_stop(os_threadpool_t *tp, int (*processing_is_complete)(os_threadpool_t *))
 {
 	while(!processing_is_complete(tp)) {
-
 	}
-	
+
 	while(tp->num_waiting_threads != tp->num_threads) {
-		
 	}
 
 	pthread_mutex_lock(&(tp->lock));
