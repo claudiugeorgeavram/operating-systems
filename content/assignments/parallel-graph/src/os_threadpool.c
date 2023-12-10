@@ -8,10 +8,14 @@
 /* Create a task that thread must execute */
 os_task_t *task_create(void *arg, void (*f)(void *))
 {
-	/* TODO: Implement task creation. */
 	os_task_t *task;
 
 	task = calloc(1, sizeof(*task));
+
+	if (!task) {
+        // Handle memory allocation failure
+        return NULL;
+    }
 
 	task->argument = arg;
 	task->task = f;
@@ -22,7 +26,6 @@ os_task_t *task_create(void *arg, void (*f)(void *))
 /* Add a new task to threadpool task queue */
 void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
 {
-	/* TODO: Implement adding new task in queue. */
 	os_task_queue_t *new_node = malloc(sizeof(os_task_queue_t));
     if (!new_node) {
         // Handle memory allocation failure
@@ -51,7 +54,6 @@ void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
 /* Get the head of task queue from threadpool */
 os_task_t *get_task(os_threadpool_t *tp)
 {
-	/* TODO: Implement getting head of task queue. */
 	os_task_t *t = NULL;
 
 	pthread_mutex_lock(&(tp->lock));
@@ -78,7 +80,6 @@ os_task_t *get_task(os_threadpool_t *tp)
 /* Initialize the new threadpool */
 os_threadpool_t *threadpool_create(unsigned int num_tasks, unsigned int num_threads)
 {
-	/* TODO: Implement thread pool creation. */
 	os_threadpool_t *tp;
 	tp = calloc(1, sizeof(*tp));
 	if (!tp) {
@@ -113,7 +114,6 @@ os_threadpool_t *threadpool_create(unsigned int num_tasks, unsigned int num_thre
 /* Loop function for threads */
 void *thread_loop_function(void *args)
 {
-	/* TODO: Implement thread loop function. */
 	os_threadpool_t *tp = (os_threadpool_t *)args;
 	os_task_t *t;
 
@@ -121,6 +121,7 @@ void *thread_loop_function(void *args)
 		t = get_task(tp);
 		if (t != NULL) {
 			t->task(t->argument);
+			free(t);
 		}
 	}
 	return NULL;
@@ -128,7 +129,6 @@ void *thread_loop_function(void *args)
 
 void threadpool_stop(os_threadpool_t *tp, int (*processing_is_complete)(os_threadpool_t *))
 {
-	/* TODO: Implement thread pool stop. */
 	while(!processing_is_complete(tp)) {
 
 	}
