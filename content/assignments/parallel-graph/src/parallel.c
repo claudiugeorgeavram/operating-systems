@@ -34,7 +34,6 @@ static void process_neighbours(void *args)
 
 	pthread_mutex_lock(&sum_lock);
 	sum += graph->nodes[current]->info;
-	//printf("SUM: %d\n", sum);
 	pthread_mutex_unlock(&sum_lock);
 
 	for (int i = 0; i < graph->nodes[current]->num_neighbours; ++i) {
@@ -121,7 +120,6 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	/* TODO: Create thread pool and traverse the graph. */
 	// Initialize the mutexes
 	pthread_mutex_init(&sum_lock, NULL);
 	pthread_mutex_init(&visited_lock, NULL);
@@ -132,6 +130,11 @@ int main(int argc, char *argv[])
 	threadpool_stop(pool, processing_is_done);
 
 	printf("%d", sum);
+
+	pthread_mutex_destroy(&sum_lock);
+	pthread_mutex_destroy(&visited_lock);
+	free(graph);
+	fclose(input_file);
 
 	return 0;
 }

@@ -33,8 +33,7 @@ void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
 
 	pthread_mutex_lock(&(tp->lock));
 
-	if(tp->tasks == NULL) {
-		
+	if(tp->tasks == NULL) {		
 		tp->tasks = new_node;
 	} else {
 		os_task_queue_t *node_iter = tp->tasks;
@@ -59,15 +58,17 @@ os_task_t *get_task(os_threadpool_t *tp)
 
 	if (tp->tasks == NULL) {
 		tp->num_waiting_threads++;
-		pthread_cond_wait(&(tp->pending_tasks_exist), &(tp->lock));
-		tp->num_waiting_threads--;
+		pthread_cond_wait(&(tp->pending_tasks_exist), &(tp->lock));		
 		if(tp->should_stop) {
 			pthread_mutex_unlock(&(tp->lock));
 			return NULL;
 		}
+		tp->num_waiting_threads--;
 	}
+	if (tp->tasks != NULL) {
 	t = tp->tasks->task;
 	tp->tasks = tp->tasks->next;
+	}
 
 	pthread_mutex_unlock(&(tp->lock));
 
@@ -122,6 +123,7 @@ void *thread_loop_function(void *args)
 			t->task(t->argument);
 		}
 	}
+	return NULL;
 }
 
 void threadpool_stop(os_threadpool_t *tp, int (*processing_is_complete)(os_threadpool_t *))
@@ -132,7 +134,9 @@ void threadpool_stop(os_threadpool_t *tp, int (*processing_is_complete)(os_threa
 	}
 	
 	while(tp->num_waiting_threads != tp->num_threads) {
+		
 	}
+
 	pthread_mutex_lock(&(tp->lock));
 	tp->should_stop = 1;
 	pthread_cond_broadcast(&(tp->pending_tasks_exist));
@@ -141,5 +145,14 @@ void threadpool_stop(os_threadpool_t *tp, int (*processing_is_complete)(os_threa
 	for (int i = 0; i < tp->num_threads; ++i) {
 		pthread_join(tp->threads[i], NULL);
 	}
+
+	// Clean up lock and condition variable
+    pthread_mutex_destroy(&(tp->lock));
+    pthread_cond_destroy(&(tp->pending_tasks_exist));
+	// Free allocated memory for threads
+    free(tp->threads);
+    // Free any other allocated resources related to the threadpool
+    free(tp);
+
 	return;
 }
