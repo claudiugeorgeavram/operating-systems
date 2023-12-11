@@ -127,9 +127,11 @@ void *thread_loop_function(void *args)
 
 void threadpool_stop(os_threadpool_t *tp, int (*processing_is_complete)(os_threadpool_t *))
 {
-	while (!processing_is_complete(tp)){}
+	while
+		(!processing_is_complete(tp));
 
-	while (tp->num_waiting_threads != tp->num_threads){}
+	while
+		(tp->num_waiting_threads != tp->num_threads);
 
 	pthread_mutex_lock(&(tp->lock));
 	tp->should_stop = 1;
