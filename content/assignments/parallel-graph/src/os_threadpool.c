@@ -13,9 +13,9 @@ os_task_t *task_create(void *arg, void (*f)(void *))
 	task = calloc(1, sizeof(*task));
 
 	if (!task) {
-        // Handle memory allocation failure
-        return NULL;
-    }
+		// Handle memory allocation failure
+		return NULL;
+	}
 
 	task->argument = arg;
 	task->task = f;
@@ -27,22 +27,23 @@ os_task_t *task_create(void *arg, void (*f)(void *))
 void add_task_in_queue(os_threadpool_t *tp, os_task_t *t)
 {
 	os_task_queue_t *new_node = malloc(sizeof(os_task_queue_t));
-    if (!new_node) {
-        // Handle memory allocation failure
-        return;
-    }
-    new_node->task = t;
-    new_node->next = NULL;\
+
+	if (!new_node) {
+		// Handle memory allocation failure
+		return;
+	}
+	new_node->task = t;
+	new_node->next = NULL;
 
 	pthread_mutex_lock(&(tp->lock));
 
-	if(tp->tasks == NULL) {
+	if (tp->tasks == NULL) {
 		tp->tasks = new_node;
 	} else {
 		os_task_queue_t *node_iter = tp->tasks;
-        while (node_iter->next != NULL) {
-            node_iter = node_iter->next;
-        }
+
+		while (node_iter->next != NULL)
+			node_iter = node_iter->next;
 		node_iter->next = new_node;
 	}
 	pthread_cond_signal(&(tp->pending_tasks_exist));
@@ -59,15 +60,15 @@ os_task_t *get_task(os_threadpool_t *tp)
 	if (tp->tasks == NULL) {
 		tp->num_waiting_threads++;
 		pthread_cond_wait(&(tp->pending_tasks_exist), &(tp->lock));
-		if(tp->should_stop) {
+		if (tp->should_stop) {
 			pthread_mutex_unlock(&(tp->lock));
 			return NULL;
 		}
 		tp->num_waiting_threads--;
 	}
 	if (tp->tasks != NULL) {
-	t = tp->tasks->task;
-	tp->tasks = tp->tasks->next;
+		t = tp->tasks->task;
+		tp->tasks = tp->tasks->next;
 	}
 
 	pthread_mutex_unlock(&(tp->lock));
@@ -79,11 +80,12 @@ os_task_t *get_task(os_threadpool_t *tp)
 os_threadpool_t *threadpool_create(unsigned int num_tasks, unsigned int num_threads)
 {
 	os_threadpool_t *tp;
+
 	tp = calloc(1, sizeof(*tp));
 	if (!tp) {
-        // Handle memory allocation failure
-        return NULL;
-    }
+		// Handle memory allocation failure
+		return NULL;
+	}
 	pthread_mutex_init(&(tp->lock), NULL);
 	pthread_cond_init(&(tp->pending_tasks_exist), NULL);
 
@@ -95,14 +97,13 @@ os_threadpool_t *threadpool_create(unsigned int num_tasks, unsigned int num_thre
 	tp->num_waiting_threads = 0;
 	tp->threads = calloc(num_threads, sizeof(pthread_t));
 	if (!tp->threads) {
-        // Handle memory allocation failure
-        free(tp);
-        return NULL;
-    }
-
-	for (int i = 0; i < tp->num_threads; i++) {
-		pthread_create(&(tp->threads[i]), NULL, thread_loop_function, (void *)tp);
+		// Handle memory allocation failure
+		free(tp);
+		return NULL;
 	}
+
+	for (int i = 0; i < tp->num_threads; i++)
+		pthread_create(&(tp->threads[i]), NULL, thread_loop_function, (void *)tp);
 
 	tp->should_stop = 0;
 	return tp;
@@ -126,28 +127,23 @@ void *thread_loop_function(void *args)
 
 void threadpool_stop(os_threadpool_t *tp, int (*processing_is_complete)(os_threadpool_t *))
 {
-	while(!processing_is_complete(tp)) {
-	}
+	while (!processing_is_complete(tp)){}
 
-	while(tp->num_waiting_threads != tp->num_threads) {
-	}
+	while (tp->num_waiting_threads != tp->num_threads){}
 
 	pthread_mutex_lock(&(tp->lock));
 	tp->should_stop = 1;
 	pthread_cond_broadcast(&(tp->pending_tasks_exist));
 	pthread_mutex_unlock(&(tp->lock));
 
-	for (int i = 0; i < tp->num_threads; ++i) {
+	for (int i = 0; i < tp->num_threads; ++i)
 		pthread_join(tp->threads[i], NULL);
-	}
 
 	// Clean up lock and condition variable
-    pthread_mutex_destroy(&(tp->lock));
-    pthread_cond_destroy(&(tp->pending_tasks_exist));
+	pthread_mutex_destroy(&(tp->lock));
+	pthread_cond_destroy(&(tp->pending_tasks_exist));
 	// Free allocated memory for threads
-    free(tp->threads);
+	free(tp->threads);
     // Free any other allocated resources related to the threadpool
-    free(tp);
-
-	return;
+	free(tp);
 }
