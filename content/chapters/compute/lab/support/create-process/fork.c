@@ -29,12 +29,36 @@ int main(void)
 		 * TODO 2: Create another child process here and print its PID
 		 * and PPID.
 		 */
+		pid = fork();
+		switch (pid) {
+		case -1:
+			DIE(1, "fork");
+			break;
+
+		case 0:
+			/* Child process */
+			printf("[child 2] current PID = %d; parent PID = %d\n",
+				getpid(), getppid());
+			return 10;
+
+		default:
+			/* Parent process */
+			printf("[child 1] child 2 PID = %d; current PID = %d\n",
+				pid, getpid());
+
+			ret_pid = waitpid(pid, &status, 0);
+			DIE(ret_pid < 0, "waitpid child");
+
+			printf("[child 1] Child 2 exited with status %d\n",
+				WEXITSTATUS(status));
+			break;
+		}
 
 		/**
 		 * TODO 1: Return a different value from the child and see
 		 * `status` change in the parent.
 		 */
-		break;
+		return 13;
 
 	default:
 		/* Parent process */

@@ -79,11 +79,26 @@ static int parse_line(char *line)
  */
 static void simple_cmd(char **args)
 {
-	(void)args;
+	pid_t pid;
+	pid_t wait_ret;
+	int status;
 	/**
 	 * TODO - Create a process to execute the command.
 	 * Use `execvp` to launch the new process.
 	 */
+	pid = fork();
+	switch (pid) {
+	case -1:
+		/* Error */
+		DIE(1, "fork");
+		break;
+
+	case 0:
+		/* Child process */
+		execvp(args[0], (char *const *) args);
+		DIE(1, "execvp");
+		break;
+	}
 }
 
 int main(void)

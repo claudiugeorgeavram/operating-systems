@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <semaphore.h>
 
 #include "utils/utils.h"
 
@@ -13,6 +14,7 @@ int main(void)
 	pid_t ret_pid;
 	pid_t pid;
 	int *p;
+	sem_t *sem;
 
 	/* TODO 1: Change the flags to disable copy-on-write. */
 	p = mmap(NULL, getpagesize(), PROT_READ | PROT_WRITE,
@@ -25,6 +27,8 @@ int main(void)
 	 * TODO 2.1: Create a semaphore in the shared page and use it to signal
 	 * the child process to end.
 	 */
+	sem = (sem_t *)(p + 10);
+	sem_init(sem, 1, 0);
 
 	pid = fork();
 	switch (pid) {
@@ -42,6 +46,7 @@ int main(void)
 		* TODO 2.2: Wait for the semaphore to be signalled by the
 		* parent.
 		*/
+		sem_wait(sem);
 
 		break;
 
@@ -51,6 +56,8 @@ int main(void)
 		 * TODO 2.3: Sleep for a few seconds before signalling the child
 		 * process to end.
 		 */
+		sleep(2);
+		sem_post(sem);
 
 		ret_pid = waitpid(pid, NULL, 0);
 		DIE(ret_pid < 0, "waitpid parent");

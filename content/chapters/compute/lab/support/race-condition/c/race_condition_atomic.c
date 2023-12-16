@@ -26,7 +26,7 @@ void *decrement_var(void *arg)
 
 	for (size_t i = 0; i < NUM_ITER; i++)
 		// TODO: Use `atomic_fetch_sub` to implement `var -= 1` atomically.
-		;
+		atomic_fetch_sub(&val, 1);
 
 	return NULL;
 }
