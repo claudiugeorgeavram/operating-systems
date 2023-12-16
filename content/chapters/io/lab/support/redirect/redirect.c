@@ -31,28 +31,47 @@ static void do_redirect(int file_des, const char *filename)
 	 * `close()`-ing `file_des` and `open()`-ing the new file "on top" of
 	 * the old file descriptor.
 	 */
+	// fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	// DIE(fd < 0, "open");
+
+	// rc = close(file_des);
+	// DIE(rc < 0, "close");
+
+	// rc = dup(fd);
+	// DIE(rc < 0, "dup");
+
+	// rc = close(fd);
+	// DIE(rc < 0, "close");
 
 	/**
 	 * TODO 2: Refactor the code below to use `dup2()` instead of `close()`
 	 * and `dup()`.
 	 */
-
-	wait_for_input(__func__, "before closing `file_des`");
-
-	/**
-	 *`close()` `stdout` so that the file descriptor created below is 1,
-	 * thus "replacing" `stdout`.
-	 */
-	rc = close(file_des);
-	DIE(rc < 0, "close");
-
-	wait_for_input(__func__, "after closing `file_des`");
-
-	/* The first available file descriptor is 1 (`stdout`). */
 	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
 	DIE(fd < 0, "open");
 
-	wait_for_input(__func__, "after opening `filename`");
+	rc = dup2(fd, filedes);
+	DIE(rc < 0, "dup2");
+
+	rc = close(fd);
+	DIE(rc < 0, "close");
+
+	// wait_for_input(__func__, "before closing `file_des`");
+
+	// /**
+	//  *`close()` `stdout` so that the file descriptor created below is 1,
+	//  * thus "replacing" `stdout`.
+	//  */
+	// rc = close(file_des);
+	// DIE(rc < 0, "close");
+
+	// wait_for_input(__func__, "after closing `file_des`");
+
+	// /* The first available file descriptor is 1 (`stdout`). */
+	// fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	// DIE(fd < 0, "open");
+
+	// wait_for_input(__func__, "after opening `filename`");
 }
 
 int main(void)

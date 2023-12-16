@@ -37,6 +37,7 @@ static void child_loop(int readfd)
 		if (rc == 0)
 		{
 			/* TODO: Close pipe head used for reading. */
+			close(readfd);
 			break;
 		}
 
@@ -63,6 +64,7 @@ static void parent_loop(int writefd)
 		if (check_for_exit(input))
 		{
 			/* TODO: Close pipe head used for writing. */
+			close(writefd);
 			break;
 		}
 
@@ -100,20 +102,26 @@ int main(void)
 	{
 	case -1: /* Fork failed, cleaning up. */
 		/* TODO: Close both heads of the pipe. */
+		close(pipedes[PIPE_READ]);
+		close(pipedes[PIPE_WRITE]);
 		DIE(pid, "fork");
 		return EXIT_FAILURE;
 
 	case 0: /* Child process. */
 		/* TODO: Close unused pipe head by child. */
+		close(pipedes[PIPE_WRITE]);
 
 		/* TODO: Call child loop and pass pipe head used for reading. */
+		child_loop(pipedes[PIPE_READ]);
 
 		break;
 
 	default: /* Parent process. */
 		/* TODO: Close unused pipe head by parent. */
+		close(pipedes[PIPE_READ]);
 
 		/* TODO: Call parent loop and pass pipe head used for writing. */
+		parent_loop(pipedes[PIPE_WRITE]);
 
 		/* Wait for child process to finish. */
 		wait(NULL);

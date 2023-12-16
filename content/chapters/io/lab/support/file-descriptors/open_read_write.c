@@ -69,6 +69,8 @@ static int open_file_for_writing(const char *file_name)
 	 * TODO 1: Open the file for writing. Remember to use `DIE()` to check
 	 * for errors.
 	 */
+	fd = open(file_name, O_WRONLY | O_CREAT, 0644);
+	DIE(fd < 0, "open");
 
 	printf("Opened file descriptor is for writing: %d\n", fd);
 
@@ -85,6 +87,19 @@ static void write_to_file(char *buff, int fd, int bytes_to_write)
 	 * ALWAYS use `write()` in a loop because it might not read all the
 	 * required bytes.
 	 */
+	while (total_written < bytes_to_write) {
+		/**
+		 * `total_written` bytes have been written so far
+		 * `buff + total_written` is the address of the first byte to be
+		 *	written
+		 * `bytes_to_write - total_written` bytes need to be written
+		 */
+		bytes_written = write(fd, buff + total_written,
+			bytes_to_write - total_written);
+		DIE(bytes_written < 0, "write");
+
+		total_written += bytes_written;
+	}
 
 	printf("Wrote %d bytes to file descriptor %d\n", total_written,
 		fd);
@@ -94,6 +109,7 @@ int main(void)
 {
 	int fd_read;
 	int fd_write;
+	int fd_write2;
 	char buff[BUFSIZ] = { 0 };
 	char message[] = "Message for file2.txt: What's up, Doc?\n";
 
@@ -107,8 +123,17 @@ int main(void)
 	 * TODO 3: Write to `READ_FILE_NAME` and then read the newly written
 	 * data. Use the functions defined above.
 	 */
+	fd_write2 = open_file_for_writing(READ_FILE_NAME);
+	write_to_file(message, fd_write2, sizeof(message));
+
+	// Look it up
+	lseek(fd_read, 0, SEEK_SET);
+	read_from_file(buff, fd_read, sizeof(buff));
 
 	/* TODO 4: `close()` the file `open()`-ed descriptors. */
+	close(fd_read);
+	close(fd_write);
+	close(fd_write2);
 
 	return 0;
 }
