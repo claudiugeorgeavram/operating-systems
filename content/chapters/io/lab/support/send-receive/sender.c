@@ -39,6 +39,7 @@ int main(void)
 
 	/* TODO 1: Add address and port to receiver_addr. */
 	/* HINT: use populate_sockaddr(). */
+	populate_sockaddr(&receiver_addr, localhost, PORT);
 
 	while (1) {
 		ret = read_input_with_prompt(buf);
@@ -47,6 +48,8 @@ int main(void)
 		/* TODO 2: Send message from buf through the socket with sendto(). */
 		/* HINT: Use receiver_addr as the fifth arg. You will need to cast it. */
 		/* Use DIE to check for errors. */
+		ret = sendto(sockfd, buf, strlen(buf), 0, (struct sockaddr *) &receiver_addr, sizeof(receiver_addr));
+		DIE(ret < 0, "sendto");
 
 		if (strncmp(buf, "exit", 4) == 0)
 			break;

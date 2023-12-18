@@ -26,14 +26,16 @@ int main(void)
 
 	/* TODO 1: Add address and port to receiver_addr. */
 	/* HINT: use populate_sockaddr(). */
+	populate_sockaddr(&receiver_addr, localhost, PORT);
 
 	/* TODO 2: Bind sockfd to receiver_addr. Use DIE to check for errors. */
+	ret =  bind(sockfd, (struct sockaddr *) &receiver_addr, sizeof(receiver_addr));
+	DIE(ret < 0, "bind");
 
 	printf("Server with PID %d is listening for data on port %d ...\n", getpid(), PORT);
 
 	while (1) {
 		/* TODO 2.1: Remove break. */
-		break;
 
 		/* Prepare the buffer */
 		memset(buf, 0, BUFSIZE);
@@ -42,6 +44,8 @@ int main(void)
 		/* HINT: Use sender_addr as the fifth arg. You will need to cast it. */
 		/*       It will be populated with information about the sender. */
 		/* Use DIE to check for errors. */
+		ret = recvfrom(sockfd, buf, BUFSIZE, 0, (struct sockaddr *) &sender_addr, &sender_addr_len);
+		DIE(ret < 0, "recvfrom");
 
 		/* Ensure buf is null-terminated. */
 		buf[BUFSIZE-1] = '\0';
