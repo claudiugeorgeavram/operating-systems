@@ -52,25 +52,37 @@ int main(void)
 		DIE(ret < 0, "read_input_with_prompt");
 
 		/* TODO 1: Create a TCP socket (SOCK_STREAM). */
+		sockfd = socket(AF_INET, SOCK_STREAM, 0);
+		DIE(sockfd < 0, "socket");
 
 		/* TODO 2: Add address and port to server_addr. */
 		/* HINT: use populate_sockaddr(). */
+		populate_sockaddr(&server_addr, localhost, PORT);
 
 		/* TODO 3: Connect to the server. */
 		/* Use DIE to check for errors. */
+		ret = connect(sockfd, (struct sockaddr *) &server_addr, sizeof(server_addr));
+		DIE(ret < 0, "connect");
 
 		/* TODO 4: Send message from buf through the socket with send(). */
+		ret = send(sockfd, buf, strlen(buf), 0);
+		DIE(ret < 0, "send");
 
 		/* If the message is "exit", break out of the loop. */
 		if (strncmp(buf, "exit", 4) == 0)
 			break;
 
 		/* TODO 5: Receive the response from the server with recv(). */
+		ret = recv(sockfd, buf, BUFSIZE, 0);
+		DIE(ret < 0, "recv");
+		buf[ret-1] = '\0';
 
 		/* Print the response. */
-		/* printf("Received from server: %s\n", buf); */
+		printf("Received from server: %s\n", buf);
 
 		/* TODO 6: Close the socket. */
+		ret = close(sockfd);
+		DIE(ret < 0, "close");
 	}
 
 	return 0;

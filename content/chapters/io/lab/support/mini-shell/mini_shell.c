@@ -35,6 +35,9 @@ static void do_redirect(int filedes, const char *filename)
 	int fd;
 
 	/* TODO: Redirect `filedes` into `fd` representing `filename`. */
+	fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 0644);
+	rc = dup2(fd, filedes);
+	rc = close(fd);
 }
 
 static void simple_cmd(char **args)
