@@ -33,7 +33,7 @@ int check_password(char *password, int len)
 
 void worker(int idx, int request_pipe_fd, int result_pipe_fd)
 {
-	char first_char;
+	char first_char_start, first_char_finish;
 	int ret;
 	char password[PASSWORD_LEN+1];
 	int i, k;
@@ -44,40 +44,48 @@ void worker(int idx, int request_pipe_fd, int result_pipe_fd)
 	 * Read the first character of the password.
 	 */
 
-	ret = read(request_pipe_fd, &first_char, sizeof(first_char));
+	ret = read(request_pipe_fd, &first_char_start, sizeof(first_char_start));
 	DIE(ret <= 0, "read");
 
-	password[0] = first_char;
+	ret = read(request_pipe_fd, &first_char_finish, sizeof(first_char_finish));
+	DIE(ret <= 0, "read");
 
-	for (i = 1; i < PASSWORD_LEN; i++)
-		password[i] = 'a'-1;
+	for (char c = first_char_start; c <= first_char_finish; c++) {
+		if (found)
+			break;
+		
+		password[0] = c;
+
+		for (i = 1; i < PASSWORD_LEN; i++)
+			password[i] = 'a'-1;
 
 
-	/*
-	 * Generate all possible combinations.
-	 */
-	k = 1;
+		/*
+		* Generate all possible combinations.
+		*/
+		k = 1;
 
-	while (k >= 1) {
-		if (password[k] < 'z') {
-			password[k]++;
+		while (k >= 1) {
+			if (password[k] < 'z') {
+				password[k]++;
 
-			if (k < PASSWORD_LEN) {
-				k++;
-				password[k] = 'a'-1;
+				if (k < PASSWORD_LEN) {
+					k++;
+					password[k] = 'a'-1;
+				}
 			}
-		}
 
-		if (k == PASSWORD_LEN) {
-			/* Check one combination */
-			if (check_password(password, PASSWORD_LEN)) {
-				found = 1;
-				break;
+			if (k == PASSWORD_LEN) {
+				/* Check one combination */
+				if (check_password(password, PASSWORD_LEN)) {
+					found = 1;
+					break;
+				}
 			}
-		}
 
-		if ((password[k] == 'z') || (k == PASSWORD_LEN)) {
-			k--;
+			if ((password[k] == 'z') || (k == PASSWORD_LEN)) {
+				k--;
+			}
 		}
 	}
 
@@ -164,15 +172,28 @@ int main()
 	int len;
 	int ret;
 	char char_list[] = "abcdefghijklmnopqrstuvwxyz";
+	int char_list_len;
 	char password[PASSWORD_LEN+1];
+	char first_char_start, first_char_finish;
+	int chunk_size;
+
+	char_list_len = sizeof(char_list) - 1;
 
 	create_workers(request_pipefd, result_pipefd);
 
-	/*
-	 * Send the first character of the password to each worker.
-	 */
+	chunk_size = char_list_len / NUM_WORKERS;
+
 	for (i = 0; i < NUM_WORKERS; i++) {
-		ret = write(request_pipefd[i], &char_list[i], sizeof(char));
+		first_char_start = char_list[i * chunk_size];
+		first_char_finish = char_list[(i+1) * chunk_size - 1];
+
+		if (i == NUM_WORKERS - 1)
+		    first_char_finish = char_list[char_list_len - 1];
+
+		ret = write(request_pipefd[i], &first_char_start, sizeof(char));
+		DIE(ret < 0, "write");
+
+		ret = write(request_pipefd[i], &first_char_finish, sizeof(char));
 		DIE(ret < 0, "write");
 	}
 
