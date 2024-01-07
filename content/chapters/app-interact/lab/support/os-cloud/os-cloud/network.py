@@ -45,6 +45,22 @@ def create_one_network(net: Net):
             raise errors.NetworkCreateException(res.stdout)
 
         # TODO: call iptables -t nat -A POSTROUTING -s {net.ip_with_prefixlen} -j MASQUERADE
+        res = subprocess.run(
+            [
+                "iptables",
+                "-t",
+                "nat",
+                "-A",
+                "POSTROUTING",
+                "-s",
+                f"{net.ip_with_prefixlen}",
+                "-j",
+                "MASQUERADE",
+            ],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+        )
     except Exception:
         raise
 

@@ -71,14 +71,20 @@ def api_vm_create():
 @app.route("/vm_stop", methods=["POST"])
 def api_vm_stop():
     # TODO: Get vm_info_args from request
+    vm_info_args = request.json
 
     # TODO: Get the VM id from vm_info_args
+    id_ = vm_info_args.get("id", None)
 
     # TODO: call vm.vm_get to obtain a VM object
+    v = vm.vm_get(id_)
 
     # TODO: call vm.vm_stop, pass the VM object as parameter
+    vm.vm_stop(v)
 
-    return jsonify({"status": "error", "error_msg": "not implemented"})
+    return jsonify({"status": "ok"})
+
+    # return jsonify({"status": "error", "error_msg": "not implemented"})
 
 
 @app.route("/vm_start", methods=["POST"])

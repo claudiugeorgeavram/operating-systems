@@ -159,7 +159,11 @@ def ubuntu_22_04_vm_prepare(vm: VM, ssh_pub_key: Optional[str] = None):
     # Setup the ssh key, if present.
     if ssh_pub_key:
         # TODO: create the /root/.ssh directory
-        # TODO: write ssh_pub_key to /root/.ssh/authorized_keys
+        e.expect_exact("root@ubuntu:~# ")
+        e.sendline("mkdir -p /root/.ssh")
+        # TODO: write ssh_pub_key to /root/.ssh/authorized_keys\
+        e.expect_exact("root@ubuntu:~# ")
+        e.sendline(f"echo '{ssh_pub_key}' > /root/.ssh/authorized_keys")
         pass
 
     # Setup network config.
@@ -277,11 +281,12 @@ def vm_create(
 
 def vm_stop(vm: VM):
     # TODO: Call stop_qemu_for_vm
-
+    stop_qemu_for_vm(vm)
     # TODO: Change the vm pid in the database to -1
-
+    db.update_vm_qemu_pid(vm.id, -1)
     # TODO: Change the vm state in the database to VM_STATE_STOPPED
-    pass
+    db.update_vm_state(vm.id, VM_STATE_STOPPED)
+    #pass
 
 
 def vm_start(vm: VM):

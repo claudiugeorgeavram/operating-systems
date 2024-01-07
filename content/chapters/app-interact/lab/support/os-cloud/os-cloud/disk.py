@@ -65,6 +65,10 @@ def create_disk_from_template(template_name: str, size: int):
         )
 
         # TODO: call /disk-templates/{template_name}/copy_files.sh
+        if res.returncode != 0:
+            raise errors.CreateDiskFromTemplateException(
+                f"copy_files.sh error: {res.stdout}"
+            )
     except Exception:
         cleanup_disk(disk_id)
         raise
